@@ -73,7 +73,7 @@
         });
 
         function sendAudioToBackend(formData) {
-            fetch('http://localhost:5400/upload-audio', {
+            fetch('/upload-audio', {
                 method: 'POST',
                 body: formData
             })
