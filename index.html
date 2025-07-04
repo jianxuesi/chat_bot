@@ -10,90 +10,83 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f4f4f9;
+            margin-top: 50px;
         }
         button {
-            margin: 10px;
             padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
             font-size: 16px;
+            cursor: pointer;
         }
-        button:disabled {
-            background-color: #ddd;
-        }
-        audio {
+        #status {
             margin-top: 20px;
         }
     </style>
 </head>
 <body>
-
     <h1>Audio Recorder</h1>
-    <button id="startBtn">Start Recording</button>
-    <button id="stopBtn" disabled>Stop Recording</button>
-    <button id="downloadBtn" disabled>Download Recording</button>
-    <audio id="audioPlayer" controls></audio>
+    <button id="start-recording">Start Recording</button>
+    <button id="stop-recording" disabled>Stop Recording</button>
+    <p id="status">Press "Start Recording" to begin.</p>
 
     <script>
         let mediaRecorder;
         let audioChunks = [];
-        const startBtn = document.getElementById('startBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const audioPlayer = document.getElementById('audioPlayer');
-        let audioBlob;
-        let audioUrl;
 
-        // Check for browser compatibility
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert("Your browser does not support audio recording.");
-        }
+        const startButton = document.getElementById('start-recording');
+        const stopButton = document.getElementById('stop-recording');
+        const statusText = document.getElementById('status');
 
-        startBtn.addEventListener('click', async () => {
-            // Get user permission to access the microphone
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                
-                mediaRecorder.ondataavailable = event => {
-                    audioChunks.push(event.data);
-                };
+        startButton.addEventListener('click', () => {
+            startButton.disabled = true;
+            stopButton.disabled = false;
+            statusText.textContent = 'Recording...';
 
-                mediaRecorder.onstop = () => {
-                    audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    audioUrl = URL.createObjectURL(audioBlob);
-                    audioPlayer.src = audioUrl;
-                    downloadBtn.disabled = false;
-                };
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
 
-                mediaRecorder.start();
-                startBtn.disabled = true;
-                stopBtn.disabled = false;
-            } catch (err) {
-                console.error('Error accessing the microphone', err);
-            }
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const formData = new FormData();
+                        formData.append('audio', audioBlob, 'audio.wav');
+                        sendAudioToBackend(formData);
+                        audioChunks = [];
+                    };
+
+                    mediaRecorder.start();
+                })
+                .catch(error => {
+                    statusText.textContent = 'Error accessing microphone.';
+                    console.error(error);
+                });
         });
 
-        stopBtn.addEventListener('click', () => {
+        stopButton.addEventListener('click', () => {
             mediaRecorder.stop();
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
+            startButton.disabled = false;
+            stopButton.disabled = true;
+            statusText.textContent = 'Uploading audio...';
         });
 
-        downloadBtn.addEventListener('click', () => {
-            const a = document.createElement('a');
-            a.href = audioUrl;
-            a.download = 'recorded-audio.wav';
-            a.click();
-        });
+        function sendAudioToBackend(formData) {
+            fetch('http://localhost:5400/upload-audio', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                statusText.textContent = 'Audio uploaded successfully!';
+                console.log('Server response:', data);
+            })
+            .catch(error => {
+                statusText.textContent = 'Error uploading audio.';
+                console.error(error);
+            });
+        }
     </script>
-
 </body>
 </html>
