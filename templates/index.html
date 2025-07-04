@@ -79,14 +79,28 @@
             })
             .then(response => response.json())
             .then(data => {
-                statusText.textContent = 'Audio uploaded successfully!';
+                statusText.textContent = data['text'];
                 console.log('Server response:', data['text']);
+                reloadAudio();
             })
             .catch(error => {
                 statusText.textContent = 'Error uploading audio.';
                 console.error(error);
             });
         }
+
+        function reloadAudio() {
+            const audio = document.getElementById("audioPlayer");
+            audio.src = "http://127.0.0.1:5400/audio?t=" + new Date().getTime();  // Force browser to load latest file
+            audio.load();
+            audio.play();
+        }
+
+        // setInterval(reloadAudio, 10000);  // Check for new audio every 10 seconds
     </script>
+    <audio id="audioPlayer" controls>
+        <source src="http://127.0.0.1:5400/audio" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
 </body>
 </html>
