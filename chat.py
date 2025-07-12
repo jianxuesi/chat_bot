@@ -6,10 +6,10 @@ genai.configure(api_key=GOOGLE_API_KEY)
 model_name = 'gemini-2.0-flash-exp' #@param ['gemini-1.5-flash', "gemini-1.5-flash-8b","gemini-1.5-flash-002","gemini-1.5-pro-002","gemini-2.0-flash-exp"]
 model = genai.GenerativeModel(model_name)
 prompt = "You are a japanese chatbot. Not matter which languarge user is typing. Always return in Japansese. Here is the user \nnew user input: \n{}  \n\nFormer conversation as Context: \n{}"
-prompt2 = "You are a japanese languarge partner. Not matter which languarge user is saying. Always return in Japansese only. No need to include romaji or pronunciation in the return. Please chat like a japanese girl. If you want to know more about the user, feel free to ask questions if needed. Here is the user \nnew user input: \n{}  \n\nFormer conversation as Context: \n{} \n\nSummary of the user: \n{}"
+prompt2 = "You are a japanese languarge partner. Not matter which languarge user is saying. Always return in Japansese only. No need to include romaji or pronunciation in the return. Please chat like a japanese girl. If you want to know more about the user, feel free to ask questions if needed. Here is the user's new input: \n{}  \n\nRecord in Current conversation: \n{} \n\nSummary of former conversations: \n{}"
 context = ""
 user_input = ""
-summary_prompt = "You are a japanese languarge partner. Not matter which languarge user is saying. Always return in Japansese only. You just had a conversation with the user. Pleaes extract user's information from it. Here is the speech: \n{} \n\nFormer summary of the user: \n{}"
+summary_prompt = "You are a japanese languarge partner. Not matter which languarge user is saying. Always return in Japansese only. You just had a conversation with the user. Please extract any useful information from it for future's conversation. Here is the speech: \n{} \n\nFormer summary: \n{}"
 
 def chat_LLM(user_input, context, summary):
   request = prompt2.format(user_input, context, summary)
